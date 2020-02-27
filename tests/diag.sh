@@ -2450,6 +2450,40 @@ wait_for_stats_flush() {
 	echo "stats push registered"
 }
 
+# Verifies multiple regex expressions against given input string. Every pattern
+# must match.
+# $1 - String to be verified against patterns.
+# $2 - List of patterns, where all must match. In case of failure 100 is
+#      returned.
+verify_pattern_list() {
+	local inputStr="$1"
+	shift
+	local patternArray=("$@")
+	local isFailure=false
+	declare -i i=0
+
+	for pat in "${patternArray[@]}"; do
+		if [[ ! $inputStr =~ $pat ]]; then
+
+			if [ $isFailure == false ]; then
+				echo "Failed pattern match against input:"
+				printf "\"\"\""
+				echo "$inputStr"
+				echo "\"\"\""
+			fi
+		
+			echo "Not matching pattern[$i]: '$pat'"
+			isFailure=true
+		fi
+		
+		i+=1
+	done
+
+	if [ $isFailure == true ]; then
+		# error_exit 1
+		error_exit 1
+	fi
+}
 
 case $1 in
    'init')	$srcdir/killrsyslog.sh # kill rsyslogd if it runs for some reason
